@@ -268,6 +268,8 @@ namespace Bcrypt
             0x578fdfe3, 0x3ac372e6, };
         private UInt32[] p_array;
         private UInt32[,] s_boxes;
+        private String password_str;
+        private Byte[] password_arr;
         public Bcrypt()
         {
             this.p_array = new UInt32[18];
@@ -285,6 +287,32 @@ namespace Bcrypt
                 this.s_boxes[2,i] = this.HEX_PI[i+512];
                 this.s_boxes[3,i] = this.HEX_PI[i+768];
             }
+        }
+
+        public void swap(ref UInt32 x1, ref UInt32 x2)
+        {
+            x1 = x1 ^ x2;
+            x2 = x2 ^ x1;
+            x1 = x1 ^ x2;
+        }
+
+        public UInt32 Blowfish_f(UInt32 x)
+        {
+            return (this.s_boxes[0, x >> 24] + this.s_boxes[1, x >> 16 & 0xff]) ^
+                   (this.s_boxes[2, x >> 8 & 0xff] + this.s_boxes[3, x & 0xff]);
+        } 
+
+        public void Blowfish_Encrypt(ref UInt32 left, ref UInt32 right)
+        {
+            for(int i = 0; i < 16; i++)
+            {
+                left = left ^ this.p_array[i];
+                right = Blowfish_f(left) ^ right;
+                swap(ref left, ref right);
+            }
+            swap(ref left, ref right);
+            right = right ^ p_array[16];
+            left = left ^ p_array[17];
         }
     }
 }
