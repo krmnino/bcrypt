@@ -268,12 +268,13 @@ namespace Bcrypt
             0x578fdfe3, 0x3ac372e6, };
         private UInt32[] p_array;
         private UInt32[,] s_boxes;
-        private String password_str;
-        private Byte[] password_arr;
-        public Bcrypt()
+        private UInt32[] password;
+        private String ctext;
+        public Bcrypt(String pw_str)
         {
             this.p_array = new UInt32[18];
             this.s_boxes = new UInt32[4,256];
+            this.password = new UInt32[18];
 
             for(int i = 0; i < 18; i++)
             {
@@ -287,9 +288,44 @@ namespace Bcrypt
                 this.s_boxes[2,i] = this.HEX_PI[i+512];
                 this.s_boxes[3,i] = this.HEX_PI[i+768];
             }
+
+            // Password expansion and store
+            int repeat_pw = 72 / pw_str.Length;
+            int remainder_pw = 72 % pw_str.Length;
+            int entry = 0;
+            int arr_byte_counter = 0;
+            UInt32 pw_char;
+            for (int i = 0; i < repeat_pw; i++)
+            { 
+                for (int j = 0; j < pw_str.Length; j++)
+                {
+                    if (arr_byte_counter > 24)
+                    {
+                        arr_byte_counter = 0;
+                        entry++;
+                    }
+                    pw_char = pw_str[j];
+                    pw_char = pw_char << (24 - arr_byte_counter);
+                    password[entry] |= pw_char;
+                    arr_byte_counter += 8;
+                }
+            }
+            for(int i = 0; i < remainder_pw; i++)
+            {
+                if (arr_byte_counter > 24)
+                {
+                    arr_byte_counter = 0;
+                    entry++;
+                }
+                pw_char = pw_str[i];
+                pw_char = pw_char << (24 - arr_byte_counter);
+                password[entry] |= pw_char;
+                arr_byte_counter += 8;
+            }
+            // END - Password expansion and store
         }
 
-        public void swap(ref UInt32 x1, ref UInt32 x2)
+        public void Swap(ref UInt32 x1, ref UInt32 x2)
         {
             x1 = x1 ^ x2;
             x2 = x2 ^ x1;
@@ -308,11 +344,20 @@ namespace Bcrypt
             {
                 left = left ^ this.p_array[i];
                 right = Blowfish_f(left) ^ right;
-                swap(ref left, ref right);
+                Swap(ref left, ref right);
             }
-            swap(ref left, ref right);
+            Swap(ref left, ref right);
             right = right ^ p_array[16];
             left = left ^ p_array[17];
         }
+
+        public void Bcrypt_ExpandKey()
+        {
+            for(int i = 0; i < 18; i++)
+            {
+                p_array[i] = p_array[i] ^ password[i];
+            }
+        }
+
     }
 }

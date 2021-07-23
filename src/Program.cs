@@ -6,11 +6,11 @@ namespace Bcrypt
     {
         static void Main(string[] args)
         {
-            Bcrypt b = new Bcrypt();
+            Bcrypt b = new Bcrypt("Password123Password123Password123Password123Password123Password123Passwo");
             b.Blowfish_f(0x12345678);
             UInt32 x = 0x12345678;
             UInt32 y = 0x87654321;
-            b.swap(ref x, ref y);
+            b.Swap(ref x, ref y);
         }
     }
 }
