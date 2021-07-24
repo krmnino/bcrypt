@@ -267,19 +267,26 @@ namespace Bcrypt
             0x3f09252d, 0xc208e69f, 0xb74e6132, 0xce77e25b,
             0x578fdfe3, 0x3ac372e6, };
         private readonly String ctext = "OrpheanBeholderScryDoubt";
+        private readonly String base64 = "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         private UInt64[] salt;
         private UInt32[] p_array;
         private UInt32[,] s_boxes;
         private UInt32[] password_arr;
         private UInt32[] ctext_arr;
-        public Bcrypt(String pw_str)
+        private int cost;
+        public Bcrypt(String pw_str, int exp)
         {
+            var rand = new Random();
             this.p_array = new UInt32[18];
             this.s_boxes = new UInt32[4,256];
             this.password_arr = new UInt32[18];
             this.salt = new UInt64[2];
-            this.salt[0] = 0x1234567812345678;
-            this.salt[1] = 0x7894561278945612;
+            this.ctext_arr = new UInt32[6];
+            //this.salt[0] = 0x1234567812345678;
+            //this.salt[1] = 0x7894561278945612;
+            this.salt[0] = (UInt64)rand.Next();
+            this.salt[1] = (UInt64)rand.Next();
+            this.cost = (int)Math.Pow(2, exp);
 
             for (int i = 0; i < 18; i++)
             {
@@ -299,7 +306,7 @@ namespace Bcrypt
             int remainder_pw = 72 % pw_str.Length;
             int entry = 0;
             int arr_byte_counter = 0;
-            UInt32 pw_char;
+            UInt32 single_char;
             for (int i = 0; i < repeat_pw; i++)
             { 
                 for (int j = 0; j < pw_str.Length; j++)
@@ -309,9 +316,9 @@ namespace Bcrypt
                         arr_byte_counter = 0;
                         entry++;
                     }
-                    pw_char = pw_str[j];
-                    pw_char = pw_char << (24 - arr_byte_counter);
-                    this.password_arr[entry] |= pw_char;
+                    single_char = pw_str[j];
+                    single_char = single_char << (24 - arr_byte_counter);
+                    this.password_arr[entry] |= single_char;
                     arr_byte_counter += 8;
                 }
             }
@@ -322,14 +329,54 @@ namespace Bcrypt
                     arr_byte_counter = 0;
                     entry++;
                 }
-                pw_char = pw_str[i];
-                pw_char = pw_char << (24 - arr_byte_counter);
-                this.password_arr[entry] |= pw_char;
+                single_char = pw_str[i];
+                single_char = single_char << (24 - arr_byte_counter);
+                this.password_arr[entry] |= single_char;
                 arr_byte_counter += 8;
             }
             // END - Password expansion and store
 
-            Bcrypt_ExpandKey();
+            // Store ctext in array of 6 UInt32's
+            entry = 0;
+            arr_byte_counter = 0;
+            for(int i = 0; i < this.ctext.Length; i++)
+            {
+                if(arr_byte_counter > 24)
+                {
+                    arr_byte_counter = 0;
+                    entry++;
+                }
+                single_char = this.ctext[i];
+                single_char = single_char << (24 - arr_byte_counter);
+                this.ctext_arr[entry] |= single_char;
+                arr_byte_counter += 8;
+            }
+            // END - Store ctext in array of 6 UInt32's
+
+            EksBlowfish_Setup();
+
+            UInt32 ctext_left;
+            UInt32 ctext_right;
+            for (int i = 0; i < 64; i++)
+            {
+                ctext_left = this.ctext_arr[0];
+                ctext_right = this.ctext_arr[1];
+                Blowfish_Encrypt(ref ctext_left, ref ctext_right);
+                this.ctext_arr[0] = ctext_left;
+                this.ctext_arr[1] = ctext_right;
+
+                ctext_left = this.ctext_arr[2];
+                ctext_right = this.ctext_arr[3];
+                Blowfish_Encrypt(ref ctext_left, ref ctext_right);
+                this.ctext_arr[2] = ctext_left;
+                this.ctext_arr[3] = ctext_right;
+
+                ctext_left = this.ctext_arr[4];
+                ctext_right = this.ctext_arr[5];
+                Blowfish_Encrypt(ref ctext_left, ref ctext_right);
+                this.ctext_arr[4] = ctext_left;
+                this.ctext_arr[5] = ctext_right;
+            }
         }
 
         public void Swap(ref UInt32 x1, ref UInt32 x2)
@@ -387,6 +434,80 @@ namespace Bcrypt
                     this.s_boxes[i,2 * j] = block_left;
                     this.s_boxes[i,2 * j + 1] = block_left;
                 }
+            }
+        }
+
+        public void Bcrypt_ExpandKey_0Password()
+        {
+            for (int i = 0; i < 18; i++)
+            {
+                this.p_array[i] = this.p_array[i] ^ 0x00000000;
+            }
+
+            UInt64 block = 0;
+            UInt32 block_left = 0;
+            UInt32 block_right = 0;
+
+            for (int i = 0; i < 9; i++)
+            {
+                block = block ^ this.salt[i % 2];
+                block_left = (UInt32)(block >> 32);
+                block_right = (UInt32)(block & 0xFFFFFFFF);
+                Blowfish_Encrypt(ref block_left, ref block_right);
+                this.p_array[2 * i] = block_left;
+                this.p_array[2 * i + 1] = block_right;
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 128; j++)
+                {
+                    Blowfish_Encrypt(ref block_left, ref block_right);
+                    this.s_boxes[i, 2 * j] = block_left;
+                    this.s_boxes[i, 2 * j + 1] = block_left;
+                }
+            }
+        }
+
+        public void Bcrypt_ExpandKey_0Salt()
+        {
+            for (int i = 0; i < 18; i++)
+            {
+                this.p_array[i] = this.p_array[i] ^ this.password_arr[i];
+            }
+
+            UInt64 block = 0;
+            UInt32 block_left = 0;
+            UInt32 block_right = 0;
+
+            for (int i = 0; i < 9; i++)
+            {
+                block = block ^ 0x0000000000000000;
+                block_left = (UInt32)(block >> 32);
+                block_right = (UInt32)(block & 0xFFFFFFFF);
+                Blowfish_Encrypt(ref block_left, ref block_right);
+                this.p_array[2 * i] = block_left;
+                this.p_array[2 * i + 1] = block_right;
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 128; j++)
+                {
+                    Blowfish_Encrypt(ref block_left, ref block_right);
+                    this.s_boxes[i, 2 * j] = block_left;
+                    this.s_boxes[i, 2 * j + 1] = block_left;
+                }
+            }
+        }
+
+        public void EksBlowfish_Setup()
+        {
+            Bcrypt_ExpandKey();
+            for(int i = 0; i < cost; i++)
+            {
+                Bcrypt_ExpandKey_0Salt();
+                Bcrypt_ExpandKey_0Password();
             }
         }
     }
