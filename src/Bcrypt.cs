@@ -266,17 +266,22 @@ namespace Bcrypt
             0x01c36ae4, 0xd6ebe1f9, 0x90d4f869, 0xa65cdea0,
             0x3f09252d, 0xc208e69f, 0xb74e6132, 0xce77e25b,
             0x578fdfe3, 0x3ac372e6, };
+        private readonly String ctext = "OrpheanBeholderScryDoubt";
+        private UInt64[] salt;
         private UInt32[] p_array;
         private UInt32[,] s_boxes;
-        private UInt32[] password;
-        private String ctext;
+        private UInt32[] password_arr;
+        private UInt32[] ctext_arr;
         public Bcrypt(String pw_str)
         {
             this.p_array = new UInt32[18];
             this.s_boxes = new UInt32[4,256];
-            this.password = new UInt32[18];
+            this.password_arr = new UInt32[18];
+            this.salt = new UInt64[2];
+            this.salt[0] = 0x1234567812345678;
+            this.salt[1] = 0x7894561278945612;
 
-            for(int i = 0; i < 18; i++)
+            for (int i = 0; i < 18; i++)
             {
                 this.p_array[i] = this.HEX_PI[i];
             }
@@ -306,7 +311,7 @@ namespace Bcrypt
                     }
                     pw_char = pw_str[j];
                     pw_char = pw_char << (24 - arr_byte_counter);
-                    password[entry] |= pw_char;
+                    this.password_arr[entry] |= pw_char;
                     arr_byte_counter += 8;
                 }
             }
@@ -319,10 +324,12 @@ namespace Bcrypt
                 }
                 pw_char = pw_str[i];
                 pw_char = pw_char << (24 - arr_byte_counter);
-                password[entry] |= pw_char;
+                this.password_arr[entry] |= pw_char;
                 arr_byte_counter += 8;
             }
             // END - Password expansion and store
+
+            Bcrypt_ExpandKey();
         }
 
         public void Swap(ref UInt32 x1, ref UInt32 x2)
@@ -347,17 +354,40 @@ namespace Bcrypt
                 Swap(ref left, ref right);
             }
             Swap(ref left, ref right);
-            right = right ^ p_array[16];
-            left = left ^ p_array[17];
+            right = right ^ this.p_array[16];
+            left = left ^ this.p_array[17];
         }
 
         public void Bcrypt_ExpandKey()
         {
             for(int i = 0; i < 18; i++)
             {
-                p_array[i] = p_array[i] ^ password[i];
+                this.p_array[i] = this.p_array[i] ^ this.password_arr[i];
+            }
+
+            UInt64 block = 0;
+            UInt32 block_left = 0;
+            UInt32 block_right = 0;
+
+            for(int i = 0; i < 9; i++)
+            {
+                block = block ^ this.salt[i % 2];
+                block_left = (UInt32)(block >> 32);
+                block_right = (UInt32)(block & 0xFFFFFFFF);
+                Blowfish_Encrypt(ref block_left, ref block_right);
+                this.p_array[2 * i] = block_left;
+                this.p_array[2 * i + 1] = block_right;
+            }
+
+            for(int i = 0; i < 4; i++)
+            {
+                for(int j = 0; j < 128; j++)
+                {
+                    Blowfish_Encrypt(ref block_left, ref block_right);
+                    this.s_boxes[i,2 * i] = block_left;
+                    this.s_boxes[i,2 * i] = block_left;
+                }
             }
         }
-
     }
 }
