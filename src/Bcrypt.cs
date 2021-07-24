@@ -384,8 +384,8 @@ namespace Bcrypt
                 for(int j = 0; j < 128; j++)
                 {
                     Blowfish_Encrypt(ref block_left, ref block_right);
-                    this.s_boxes[i,2 * i] = block_left;
-                    this.s_boxes[i,2 * i] = block_left;
+                    this.s_boxes[i,2 * j] = block_left;
+                    this.s_boxes[i,2 * j + 1] = block_left;
                 }
             }
         }
