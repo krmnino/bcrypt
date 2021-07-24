@@ -268,11 +268,12 @@ namespace Bcrypt
             0x578fdfe3, 0x3ac372e6, };
         private readonly String ctext = "OrpheanBeholderScryDoubt";
         private readonly String base64 = "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        private UInt64[] salt;
+        private UInt32[] salt;
         private UInt32[] p_array;
         private UInt32[,] s_boxes;
         private UInt32[] password_arr;
         private UInt32[] ctext_arr;
+        private String hash;
         private int cost;
         public Bcrypt(String pw_str, int exp)
         {
@@ -280,12 +281,12 @@ namespace Bcrypt
             this.p_array = new UInt32[18];
             this.s_boxes = new UInt32[4,256];
             this.password_arr = new UInt32[18];
-            this.salt = new UInt64[2];
             this.ctext_arr = new UInt32[6];
-            //this.salt[0] = 0x1234567812345678;
-            //this.salt[1] = 0x7894561278945612;
-            this.salt[0] = (UInt64)rand.Next();
-            this.salt[1] = (UInt64)rand.Next();
+            this.salt = new UInt32[4];
+            this.salt[0] = (UInt32)rand.Next();
+            this.salt[1] = (UInt32)rand.Next();
+            this.salt[2] = (UInt32)rand.Next();
+            this.salt[3] = (UInt32)rand.Next();
             this.cost = (int)Math.Pow(2, exp);
 
             for (int i = 0; i < 18; i++)
@@ -377,7 +378,15 @@ namespace Bcrypt
                 this.ctext_arr[4] = ctext_left;
                 this.ctext_arr[5] = ctext_right;
             }
+
+            this.hash = "$2b" + "$" + exp.ToString() + "$" +
+                        EncodeBase64(ref this.salt, 0) +
+                        EncodeBase64(ref this.ctext_arr, 1);
+
+            CleanUp();
         }
+
+        public String Hash { get => this.hash; }
 
         public void Swap(ref UInt32 x1, ref UInt32 x2)
         {
@@ -415,10 +424,12 @@ namespace Bcrypt
             UInt64 block = 0;
             UInt32 block_left = 0;
             UInt32 block_right = 0;
+            int salt_idx;
 
             for(int i = 0; i < 9; i++)
             {
-                block = block ^ this.salt[i % 2];
+                salt_idx = i % 2;
+                block = block ^ (((UInt64)this.salt[salt_idx]) << 32) | this.salt[salt_idx + 1];
                 block_left = (UInt32)(block >> 32);
                 block_right = (UInt32)(block & 0xFFFFFFFF);
                 Blowfish_Encrypt(ref block_left, ref block_right);
@@ -447,10 +458,12 @@ namespace Bcrypt
             UInt64 block = 0;
             UInt32 block_left = 0;
             UInt32 block_right = 0;
+            int salt_idx;
 
             for (int i = 0; i < 9; i++)
             {
-                block = block ^ this.salt[i % 2];
+                salt_idx = i % 2;
+                block = block ^ (((UInt64)this.salt[salt_idx]) << 32) | this.salt[salt_idx + 1];
                 block_left = (UInt32)(block >> 32);
                 block_right = (UInt32)(block & 0xFFFFFFFF);
                 Blowfish_Encrypt(ref block_left, ref block_right);
@@ -504,10 +517,109 @@ namespace Bcrypt
         public void EksBlowfish_Setup()
         {
             Bcrypt_ExpandKey();
-            for(int i = 0; i < cost; i++)
+            for(int i = 0; i < this.cost; i++)
             {
                 Bcrypt_ExpandKey_0Salt();
                 Bcrypt_ExpandKey_0Password();
+            }
+        }
+
+        public String EncodeBase64(ref UInt32[] data, int char_truncate)
+        {
+            String buffer = "";
+            int p = 0;
+            UInt32 c1;
+            UInt32 c2;
+            int entry = 0;
+            int arr_byte_counter = 0;
+            while(p < data.Length * 4 - char_truncate)
+            {
+                if (arr_byte_counter > 24)
+                {
+                    arr_byte_counter = 0;
+                    entry++;
+                }
+                c1 = data[entry] >> (24 - arr_byte_counter) & 0xFF;
+                arr_byte_counter += 8;
+                p++;
+
+                buffer += this.base64[(int)(c1 >> 2)];
+
+                c1 = (c1 & 0x03) << 4;
+
+                if(p >= data.Length * 4 - char_truncate)
+                {
+                    buffer += this.base64[(int)c1];
+                    break;
+                }
+
+                if (arr_byte_counter > 24)
+                {
+                    arr_byte_counter = 0;
+                    entry++;
+                }
+                c2 = data[entry] >> (24 - arr_byte_counter) & 0xFF;
+                arr_byte_counter += 8;
+                p++;
+
+                c1 |= (c2 >> 4) & 0x0F;
+
+                buffer += this.base64[(int)c1];
+
+                c1 = (c2 & 0x0F) << 2;
+
+                if (p >= data.Length * 4 - char_truncate)
+                {
+                    buffer += this.base64[(int)c1];
+                    break;
+                }
+
+                if (arr_byte_counter > 24)
+                {
+                    arr_byte_counter = 0;
+                    entry++;
+                }
+                c2 = data[entry] >> (24 - arr_byte_counter) & 0xFF;
+                arr_byte_counter += 8;
+                p++;
+
+                c1 |= (c2 >> 6) & 0x03;
+
+                buffer += this.base64[(int)c1];
+                buffer += this.base64[(int)(c2 & 0x3F)];
+
+            }
+            return buffer;
+        }
+
+        public void CleanUp()
+        {
+            // Clean up P-array and password array
+            for (int i = 0; i < 18; i++)
+            {
+                this.p_array[i] = 0x00000000;
+                this.password_arr[i] = 0x00000000;
+            }
+
+            // Clean up S-boxes
+            for (int i = 18; i < 256; i++)
+            {
+                this.s_boxes[0, i] = 0x00000000;
+                this.s_boxes[1, i] = 0x00000000;
+                this.s_boxes[2, i] = 0x00000000;
+                this.s_boxes[3, i] = 0x00000000;
+            }
+
+            // Clean up password array
+            for (int i = 0; i < 6; i++)
+            {
+                this.ctext_arr[i] = 0x00000000;
+            }
+
+            // Clean up salt array
+            for (int i = 0; i < 4; i++)
+            {
+                this.salt[i] = 0x00000000;
             }
         }
     }
