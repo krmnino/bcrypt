@@ -268,6 +268,21 @@ namespace Bcrypt
             0x578fdfe3, 0x3ac372e6, };
         private readonly String ctext = "OrpheanBeholderScryDoubt";
         private readonly String base64 = "./ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        private readonly Byte[] index64 = {
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+            255, 255, 255, 255, 255, 255, 0, 1, 54, 55,
+            56, 57, 58, 59, 60, 61, 62, 63, 255, 255,
+            255, 255, 255, 255, 255, 2, 3, 4, 5, 6,
+            7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+            17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
+            255, 255, 255, 255, 255, 255, 28, 29, 30,
+            31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+            41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
+            51, 52, 53, 255, 255, 255, 255, 255
+        };
         private UInt32[] salt;
         private UInt32[] p_array;
         private UInt32[,] s_boxes;
@@ -592,6 +607,132 @@ namespace Bcrypt
             return buffer;
         }
 
+        private Byte get_index64(UInt32 c)
+        {
+            return (c > 127) ? (Byte)255 : this.index64[c];
+        }
+
+        public UInt32[] DecodeBase64(ref String data, int char_truncate)
+        {
+            String buffer = "";
+            int p = 0;
+            int bp = 0;
+            UInt32 c1;
+            UInt32 c2;
+            UInt32 c3;
+            UInt32 c4;
+            while (p < (data.Length - char_truncate))
+            {
+                c1 = get_index64(data[p]);
+                c2 = get_index64(data[p + 1]);
+
+                if(c1 == 255 || c2 == 255)
+                {
+                    break;
+                }
+
+                buffer += ((c1 << 2) | ((c2 & 0x30) >> 4)).ToString("x");
+                bp++;
+
+                if ((p + 2) >= data.Length)
+                {
+                    break;
+                }
+
+                c3 = get_index64(data[p + 2]);
+
+                if(c3 == 255)
+                {
+                    break;
+                }
+
+                buffer += (((c2 & 0x0f) << 4) | ((c3 & 0x3c) >> 2)).ToString("x");
+                bp++;
+
+                if((p + 3) >= data.Length)
+                {
+                    break;
+                }
+
+                c4 = get_index64(data[p + 3]);
+
+                if(c4 == 255)
+                {
+                    break;
+                }
+
+                buffer += (((c3 & 0x03) << 6) | c4).ToString("x");
+                bp++;
+                p += 4;
+            }
+            UInt32[] ret = new UInt32[buffer.Length / 2];
+            for(int i = 0; i < ret.Length; i++)
+            {
+                switch (buffer[i])
+                {
+                    case 'a':
+                    case 'A':
+                        ret[i] = (UInt32)0xa << 4;
+                        break;
+                    case 'b':
+                    case 'B':
+                        ret[i] = (UInt32)0xb << 4;
+                        break;
+                    case 'c':
+                    case 'C':
+                        ret[i] = (UInt32)0xc << 4;
+                        break;
+                    case 'd':
+                    case 'D':
+                        ret[i] = (UInt32)0xd << 4;
+                        break;
+                    case 'e':
+                    case 'E':
+                        ret[i] = (UInt32)0xe << 4;
+                        break;
+                    case 'f':
+                    case 'F':
+                        ret[i] = (UInt32)0xf << 4;
+                        break;
+                    default:
+                        ret[i] = (UInt32)(buffer[i] & 0x0f) << 4;
+                        break;
+                }
+
+                switch (buffer[i+1])
+                {
+                    case 'a':
+                    case 'A':
+                        ret[i] |= (UInt32)0xa;
+                        break;
+                    case 'b':
+                    case 'B':
+                        ret[i] |= (UInt32)0xb;
+                        break;
+                    case 'c':
+                    case 'C':
+                        ret[i] |= (UInt32)0xc;
+                        break;
+                    case 'd':
+                    case 'D':
+                        ret[i] |= (UInt32)0xd;
+                        break;
+                    case 'e':
+                    case 'E':
+                        ret[i] |= (UInt32)0xe;
+                        break;
+                    case 'f':
+                    case 'F':
+                        ret[i] |= (UInt32)0xf;
+                        break;
+                    default:
+                        ret[i] |= (UInt32)(buffer[i + 1] & 0x0f);
+                        break;
+                }
+            }
+            return ret;
+        }
+        
         public void CleanUp()
         {
             // Clean up P-array and password array
