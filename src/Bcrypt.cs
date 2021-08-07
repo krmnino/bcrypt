@@ -665,70 +665,75 @@ namespace Bcrypt
                 bp++;
                 p += 4;
             }
-            UInt32[] ret = new UInt32[buffer.Length / 2];
-            for(int i = 0; i < ret.Length; i++)
+            UInt32[] ret = new UInt32[buffer.Length / 8];
+            UInt32 val;
+            for (int i = 0; i < ret.Length; i++)
             {
-                switch (buffer[i])
+                for (int j = 0; j < 8; j += 2)
                 {
-                    case 'a':
-                    case 'A':
-                        ret[i] = (UInt32)0xa << 4;
-                        break;
-                    case 'b':
-                    case 'B':
-                        ret[i] = (UInt32)0xb << 4;
-                        break;
-                    case 'c':
-                    case 'C':
-                        ret[i] = (UInt32)0xc << 4;
-                        break;
-                    case 'd':
-                    case 'D':
-                        ret[i] = (UInt32)0xd << 4;
-                        break;
-                    case 'e':
-                    case 'E':
-                        ret[i] = (UInt32)0xe << 4;
-                        break;
-                    case 'f':
-                    case 'F':
-                        ret[i] = (UInt32)0xf << 4;
-                        break;
-                    default:
-                        ret[i] = (UInt32)(buffer[i] & 0x0f) << 4;
-                        break;
+                    switch (buffer[(8 * i) + j])
+                    {
+                        case 'a':
+                        case 'A':
+                            val = (UInt32)0xa << 4;
+                            break;
+                        case 'b':
+                        case 'B':
+                            val = (UInt32)0xb << 4;
+                            break;
+                        case 'c':
+                        case 'C':
+                            val = (UInt32)0xc << 4;
+                            break;
+                        case 'd':
+                        case 'D':
+                            val = (UInt32)0xd << 4;
+                            break;
+                        case 'e':
+                        case 'E':
+                            val = (UInt32)0xe << 4;
+                            break;
+                        case 'f':
+                        case 'F':
+                            val = (UInt32)0xf << 4;
+                            break;
+                        default:
+                            val = (UInt32)(buffer[(8 * i) + j] & 0x0f) << 4;
+                            break;
+                    }
+                    switch (buffer[(8 * i) + j + 1])
+                    {
+                        case 'a':
+                        case 'A':
+                            val |= (UInt32)0xa;
+                            break;
+                        case 'b':
+                        case 'B':
+                            val |= (UInt32)0xb;
+                            break;
+                        case 'c':
+                        case 'C':
+                            val |= (UInt32)0xc;
+                            break;
+                        case 'd':
+                        case 'D':
+                            val |= (UInt32)0xd;
+                            break;
+                        case 'e':
+                        case 'E':
+                            val |= (UInt32)0xe;
+                            break;
+                        case 'f':
+                        case 'F':
+                            val |= (UInt32)0xf;
+                            break;
+                        default:
+                            val |= (UInt32)(buffer[(8 * i) + j + 1] & 0x0f);
+                            break;
+                    }
+                    ret[i] |= val << (8 * (4 - (j / 2) - 1));
                 }
-
-                switch (buffer[i+1])
-                {
-                    case 'a':
-                    case 'A':
-                        ret[i] |= (UInt32)0xa;
-                        break;
-                    case 'b':
-                    case 'B':
-                        ret[i] |= (UInt32)0xb;
-                        break;
-                    case 'c':
-                    case 'C':
-                        ret[i] |= (UInt32)0xc;
-                        break;
-                    case 'd':
-                    case 'D':
-                        ret[i] |= (UInt32)0xd;
-                        break;
-                    case 'e':
-                    case 'E':
-                        ret[i] |= (UInt32)0xe;
-                        break;
-                    case 'f':
-                    case 'F':
-                        ret[i] |= (UInt32)0xf;
-                        break;
-                    default:
-                        ret[i] |= (UInt32)(buffer[i + 1] & 0x0f);
-                        break;
-                }
+                
             }
             return ret;
         }
