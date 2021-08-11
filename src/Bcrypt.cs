@@ -551,8 +551,8 @@ namespace Bcrypt
 
         public UInt32 Blowfish_f(UInt32 x)
         {
-            return (this.s_boxes[0, x >> 24] + this.s_boxes[1, x >> 16 & 0xff]) ^
-                   (this.s_boxes[2, x >> 8 & 0xff] + this.s_boxes[3, x & 0xff]);
+            return ((this.s_boxes[0, x >> 24] + this.s_boxes[1, x >> 16 & 0xff]) ^
+                   this.s_boxes[2, x >> 8 & 0xff]) + this.s_boxes[3, x & 0xff];
         } 
 
         public void Blowfish_Encrypt(ref UInt32 left, ref UInt32 right)
@@ -578,12 +578,10 @@ namespace Bcrypt
             UInt64 block = 0;
             UInt32 block_left = 0;
             UInt32 block_right = 0;
-            int salt_idx;
 
             for(int i = 0; i < 9; i++)
             {
-                salt_idx = i % 2;
-                block = block ^ (((UInt64)this.salt[salt_idx]) << 32) | this.salt[salt_idx + 1];
+                block = block ^ (((UInt64)this.salt[2 * (i % 2) + 1]) << 32) | this.salt[2 * (i % 2)];
                 block_left = (UInt32)(block >> 32);
                 block_right = (UInt32)(block & 0xFFFFFFFF);
                 Blowfish_Encrypt(ref block_left, ref block_right);
