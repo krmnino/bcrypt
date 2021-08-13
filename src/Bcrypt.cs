@@ -600,6 +600,34 @@ namespace Bcrypt
             }
         }
 
+        public void Bcrypt_Expand0Key(ref UInt32[] key)
+        {
+            for (int i = 0; i < 18; i++)
+            {
+                this.p_array[i] = this.p_array[i] ^ this.key[i];
+            }
+
+            UInt32 block_left = 0;
+            UInt32 block_right = 0;
+
+            for (int i = 0; i < 9; i++)
+            {
+                Blowfish_Encrypt(ref block_left, ref block_right);
+                this.p_array[2 * i] = block_left;
+                this.p_array[2 * i + 1] = block_right;
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 128; j++)
+                {
+                    Blowfish_Encrypt(ref block_left, ref block_right);
+                    this.s_boxes[i, 2 * j] = block_left;
+                    this.s_boxes[i, 2 * j + 1] = block_left;
+                }
+            }
+        }
+
         public void Bcrypt_ExpandKey_0Password()
         {
             for (int i = 0; i < 18; i++)
