@@ -604,7 +604,7 @@ namespace Bcrypt
         {
             for (int i = 0; i < 18; i++)
             {
-                this.p_array[i] = this.p_array[i] ^ this.key[i];
+                this.p_array[i] = this.p_array[i] ^ key[i];
             }
 
             UInt32 block_left = 0;
