@@ -699,8 +699,8 @@ namespace Bcrypt
             Bcrypt_ExpandKey();
             for(int i = 0; i < this.cost; i++)
             {
-                Bcrypt_ExpandKey_0Salt();
-                Bcrypt_ExpandKey_0Password();
+                Bcrypt_Expand0Key(ref this.password_arr);
+                Bcrypt_Expand0Key(ref this.salt);
             }
         }
 
