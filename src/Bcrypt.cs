@@ -730,7 +730,7 @@ namespace Bcrypt
             for(int i = 0; i < this.cost; i++)
             {
                 Bcrypt_Expand0Key(ref this.password_arr);
-                Bcrypt_Expand0Key(ref this.salt);
+                Bcrypt_Expand0Key(ref this.salt_ext);
             }
         }
 
