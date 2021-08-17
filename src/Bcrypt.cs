@@ -287,6 +287,7 @@ namespace Bcrypt
         private UInt32[] p_array;
         private UInt32[,] s_boxes;
         private UInt32[] password_arr;
+        private UInt32[] salt_ext;
         private UInt32[] ctext_arr;
         private String hash;
         private int cost;
@@ -300,6 +301,7 @@ namespace Bcrypt
             this.password_arr = new UInt32[18];
             this.ctext_arr = new UInt32[6];
             this.salt = new UInt32[4];
+            this.salt_ext = new UInt32[18];
 
             // Check that cost factor is between 4 and 31 inclusive
             if(exp < 4)
@@ -379,12 +381,23 @@ namespace Bcrypt
             }
             // END - Store ctext in array of 6 UInt32's
 
-            // Set salt to input salt
-            for(int i = 0; i < this.salt.Length; i++)
+            // Set salt to input salt, expansion, and store
+            for (int i = 0; i < this.salt.Length; i++)
             {
                 this.salt[i] = input_salt[i];
             }
-            // END - Set salt to input salt
+
+            int salt_entry = 0;
+            for (int i = 0; i < this.salt_ext.Length; i++)
+            {
+                this.salt_ext[i] = this.salt[salt_entry++];
+                if (salt_entry == 4)
+                {
+                    salt_entry = 0;
+                }
+            }
+
+            // END - Set salt to input salt, expansion, and store
 
             EksBlowfish_Setup();
 
@@ -426,11 +439,8 @@ namespace Bcrypt
             this.password_arr = new UInt32[18];
             this.ctext_arr = new UInt32[6];
             this.salt = new UInt32[4];
-            this.salt[0] = (UInt32)rand.Next();
-            this.salt[1] = (UInt32)rand.Next();
-            this.salt[2] = (UInt32)rand.Next();
-            this.salt[3] = (UInt32)rand.Next();
-
+            this.salt_ext = new UInt32[18];
+           
             // Check that cost factor is between 4 and 31 inclusive
             if (exp < 4)
             {
@@ -490,6 +500,26 @@ namespace Bcrypt
                 arr_byte_counter += 8;
             }
             // END - Password expansion and store
+
+
+            // Salt generation, expansion, and store
+
+            this.salt[0] = (UInt32)rand.Next();
+            this.salt[1] = (UInt32)rand.Next();
+            this.salt[2] = (UInt32)rand.Next();
+            this.salt[3] = (UInt32)rand.Next();
+
+            int salt_entry = 0;
+            for (int i = 0; i < this.salt_ext.Length; i++)
+            {
+                this.salt_ext[i] = this.salt[salt_entry++];
+                if (salt_entry == 4)
+                {
+                    salt_entry = 0;
+                }
+            }
+
+            // END - Salt generation, expansion, and store
 
             // Store ctext in array of 6 UInt32's
             entry = 0;
