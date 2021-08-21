@@ -330,7 +330,6 @@ namespace Bcrypt
 
             // Password expansion and store
             int repeat_pw = 72 / pw_str.Length;
-            int remainder_pw = 72 % pw_str.Length;
             int entry = 0;
             int arr_byte_counter = 0;
             UInt32 single_char;
@@ -472,12 +471,11 @@ namespace Bcrypt
 
             // Password expansion and store
             int repeat_pw = 72 / pw_str.Length;
-            int remainder_pw = 72 % pw_str.Length;
             int entry = 0;
             int arr_byte_counter = 0;
             UInt32 single_char;
             for (int i = 0; i < repeat_pw; i++)
-            { 
+            {
                 for (int j = 0; j < pw_str.Length; j++)
                 {
                     if (arr_byte_counter > 24)
@@ -485,23 +483,25 @@ namespace Bcrypt
                         arr_byte_counter = 0;
                         entry++;
                     }
+                    if (entry >= password_ext.Length)
+                    {
+                        break;
+                    }
                     single_char = pw_str[j];
                     single_char = single_char << (24 - arr_byte_counter);
                     this.password_ext[entry] |= single_char;
                     arr_byte_counter += 8;
+                    if (j == pw_str.Length - 1)
+                    {
+                        if (arr_byte_counter > 24)
+                        {
+                            arr_byte_counter = 0;
+                            entry++;
+                        }
+                        this.password_ext[entry] |= 0x00;
+                        arr_byte_counter += 8;
+                    }
                 }
-            }
-            for(int i = 0; i < remainder_pw; i++)
-            {
-                if (arr_byte_counter > 24)
-                {
-                    arr_byte_counter = 0;
-                    entry++;
-                }
-                single_char = pw_str[i];
-                single_char = single_char << (24 - arr_byte_counter);
-                this.password_ext[entry] |= single_char;
-                arr_byte_counter += 8;
             }
             // END - Password expansion and store
 
@@ -613,7 +613,6 @@ namespace Bcrypt
 
             // Password expansion and store
             int repeat_pw = 72 / pw_str.Length;
-            int remainder_pw = 72 % pw_str.Length;
             int entry = 0;
             int arr_byte_counter = 0;
             UInt32 single_char;
