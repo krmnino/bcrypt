@@ -286,7 +286,7 @@ namespace Bcrypt
         private UInt32[] salt;
         private UInt32[] p_array;
         private UInt32[,] s_boxes;
-        private UInt32[] password_arr;
+        private UInt32[] password_ext;
         private UInt32[] salt_ext;
         private UInt32[] ctext_arr;
         private String hash;
@@ -298,7 +298,7 @@ namespace Bcrypt
         {
             this.p_array = new UInt32[18];
             this.s_boxes = new UInt32[4, 256];
-            this.password_arr = new UInt32[18];
+            this.password_ext = new UInt32[18];
             this.ctext_arr = new UInt32[6];
             this.salt = new UInt32[4];
             this.salt_ext = new UInt32[18];
@@ -322,10 +322,10 @@ namespace Bcrypt
 
             for (int i = 0; i < 256; i++)
             {
-                this.s_boxes[0, i] = this.HEX_PI[i - 18];
-                this.s_boxes[1, i] = this.HEX_PI[i + 256 - 18];
-                this.s_boxes[2, i] = this.HEX_PI[i + 512 - 18];
-                this.s_boxes[3, i] = this.HEX_PI[i + 768 - 18];
+                this.s_boxes[0, i] = this.HEX_PI[i + 18];
+                this.s_boxes[1, i] = this.HEX_PI[i + 256 + 18];
+                this.s_boxes[2, i] = this.HEX_PI[i + 512 + 18];
+                this.s_boxes[3, i] = this.HEX_PI[i + 768 + 18];
             }
 
             // Password expansion and store
@@ -343,24 +343,25 @@ namespace Bcrypt
                         arr_byte_counter = 0;
                         entry++;
                     }
+                    if (entry >= password_ext.Length)
+                    {
+                        break;
+                    }
                     single_char = pw_str[j];
                     single_char = single_char << (24 - arr_byte_counter);
-                    this.password_arr[entry] |= single_char;
+                    this.password_ext[entry] |= single_char;
                     arr_byte_counter += 8;
+                    if (j == pw_str.Length - 1)
+                    {
+                        if (arr_byte_counter > 24)
+                        {
+                            arr_byte_counter = 0;
+                            entry++;
+                        }
+                        this.password_ext[entry] |= 0x00;
+                        arr_byte_counter += 8;
+                    }
                 }
-            }
-
-            for (int i = 0; i < remainder_pw; i++)
-            {
-                if (arr_byte_counter > 24)
-                {
-                    arr_byte_counter = 0;
-                    entry++;
-                }
-                single_char = pw_str[i];
-                single_char = single_char << (24 - arr_byte_counter);
-                this.password_arr[entry] |= single_char;
-                arr_byte_counter += 8;
             }
             // END - Password expansion and store
 
@@ -401,7 +402,7 @@ namespace Bcrypt
             Bcrypt_ExpandKey();
             for (int i = 0; i < this.cost; i++)
             {
-                Bcrypt_Expand0Key(ref this.password_arr);
+                Bcrypt_Expand0Key(ref this.password_ext);
                 Bcrypt_Expand0Key(ref this.salt_ext);
             }
 
@@ -428,7 +429,7 @@ namespace Bcrypt
                 this.ctext_arr[5] = ctext_right;
             }
 
-            this.hash = "$2b" + "$" + exp.ToString() + "$" +
+            this.hash = "$2b" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
                         EncodeBase64(ref this.salt, 0) +
                         EncodeBase64(ref this.ctext_arr, 1);
 
@@ -439,7 +440,7 @@ namespace Bcrypt
         {
             this.p_array = new UInt32[18];
             this.s_boxes = new UInt32[4,256];
-            this.password_arr = new UInt32[18];
+            this.password_ext = new UInt32[18];
             this.salt = new UInt32[4];
             this.salt_ext = new UInt32[18];
             this.ctext_arr = new UInt32[6];
@@ -486,7 +487,7 @@ namespace Bcrypt
                     }
                     single_char = pw_str[j];
                     single_char = single_char << (24 - arr_byte_counter);
-                    this.password_arr[entry] |= single_char;
+                    this.password_ext[entry] |= single_char;
                     arr_byte_counter += 8;
                 }
             }
@@ -499,7 +500,7 @@ namespace Bcrypt
                 }
                 single_char = pw_str[i];
                 single_char = single_char << (24 - arr_byte_counter);
-                this.password_arr[entry] |= single_char;
+                this.password_ext[entry] |= single_char;
                 arr_byte_counter += 8;
             }
             // END - Password expansion and store
@@ -542,7 +543,7 @@ namespace Bcrypt
             Bcrypt_ExpandKey();
             for (int i = 0; i < this.cost; i++)
             {
-                Bcrypt_Expand0Key(ref this.password_arr);
+                Bcrypt_Expand0Key(ref this.password_ext);
                 Bcrypt_Expand0Key(ref this.salt_ext);
             }
 
@@ -569,7 +570,7 @@ namespace Bcrypt
                 this.ctext_arr[5] = ctext_right;
             }
 
-            this.hash = "$2b" + "$" + exp.ToString() + "$" +
+            this.hash = "$2b" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
                         EncodeBase64(ref this.salt, 0) +
                         EncodeBase64(ref this.ctext_arr, 1);
 
@@ -580,7 +581,7 @@ namespace Bcrypt
         {
             this.p_array = new UInt32[18];
             this.s_boxes = new UInt32[4, 256];
-            this.password_arr = new UInt32[18];
+            this.password_ext = new UInt32[18];
             this.ctext_arr = new UInt32[6];
             this.salt = new UInt32[4];
             this.salt_ext = new UInt32[18];
@@ -611,7 +612,6 @@ namespace Bcrypt
             }
 
             // Password expansion and store
-            // Add 1 to password length to account for null character
             int repeat_pw = 72 / pw_str.Length;
             int remainder_pw = 72 % pw_str.Length;
             int entry = 0;
@@ -626,39 +626,26 @@ namespace Bcrypt
                         arr_byte_counter = 0;
                         entry++;
                     }
-                    if(entry >= password_arr.Length)
+                    if (entry >= password_ext.Length)
                     {
                         break;
                     }
                     single_char = pw_str[j];
                     single_char = single_char << (24 - arr_byte_counter);
-                    this.password_arr[entry] |= single_char;
+                    this.password_ext[entry] |= single_char;
                     arr_byte_counter += 8;
-                    if(j == pw_str.Length - 1)
+                    if (j == pw_str.Length - 1)
                     {
                         if (arr_byte_counter > 24)
                         {
                             arr_byte_counter = 0;
                             entry++;
                         }
-                        this.password_arr[entry] |= 0x00;
+                        this.password_ext[entry] |= 0x00;
                         arr_byte_counter += 8;
                     }
                 }
             }
-
-            //for (int i = 0; i < remainder_pw; i++)
-            //{
-            //    if (arr_byte_counter > 24)
-            //    {
-            //        arr_byte_counter = 0;
-            //        entry++;
-            //    }
-            //    single_char = pw_str[i];
-            //    single_char = single_char << (24 - arr_byte_counter);
-            //    this.password_arr[entry] |= single_char;
-            //    arr_byte_counter += 8;
-            //}
             // END - Password expansion and store
 
             // Store ctext in array of 6 UInt32's
@@ -695,7 +682,7 @@ namespace Bcrypt
             Bcrypt_ExpandKey();
             for (int i = 0; i < this.cost; i++)
             {
-                Bcrypt_Expand0Key(ref this.password_arr);
+                Bcrypt_Expand0Key(ref this.password_ext);
                 Bcrypt_Expand0Key(ref this.salt_ext);
             }
 
@@ -722,7 +709,7 @@ namespace Bcrypt
                 this.ctext_arr[5] = ctext_right;
             }
 
-            this.hash = "$2b" + "$" + exp.ToString() + "$" +
+            this.hash = "$2b" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
                         EncodeBase64(ref this.salt, 0) +
                         EncodeBase64(ref this.ctext_arr, 1);
 
@@ -773,7 +760,7 @@ namespace Bcrypt
         {
             for(int i = 0; i < 18; i++)
             {
-                this.p_array[i] = this.p_array[i] ^ this.password_arr[i];
+                this.p_array[i] = this.p_array[i] ^ this.password_ext[i];
             }
 
             UInt64 block = 0;
@@ -837,16 +824,6 @@ namespace Bcrypt
                     this.s_boxes[i, 2 * j] = block_left;
                     this.s_boxes[i, 2 * j + 1] = block_right;
                 }
-            }
-        }
-
-        public void EksBlowfish_Setup()
-        {
-            Bcrypt_ExpandKey();
-            for(int i = 0; i < this.cost; i++)
-            {
-                Bcrypt_Expand0Key(ref this.password_arr);
-                Bcrypt_Expand0Key(ref this.salt_ext);
             }
         }
 
@@ -1055,7 +1032,7 @@ namespace Bcrypt
             for (int i = 0; i < 18; i++)
             {
                 this.p_array[i] = 0x00000000;
-                this.password_arr[i] = 0x00000000;
+                this.password_ext[i] = 0x00000000;
             }
 
             // Clean up S-boxes
