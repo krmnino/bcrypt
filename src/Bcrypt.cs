@@ -292,7 +292,7 @@ namespace Bcrypt
         private String hash;
         private int cost;
 
-        public Bcrypt() {}
+        public Bcrypt() { }
 
         public Bcrypt(ref String pw_str, ref UInt32[] input_salt, int exp)
         {
@@ -304,11 +304,11 @@ namespace Bcrypt
             this.salt_ext = new UInt32[18];
 
             // Check that cost factor is between 4 and 31 inclusive
-            if(exp < 4)
+            if (exp < 4)
             {
                 exp = 4;
             }
-            else if(exp > 31)
+            else if (exp > 31)
             {
                 exp = 31;
             }
@@ -428,7 +428,7 @@ namespace Bcrypt
                 this.ctext_arr[5] = ctext_right;
             }
 
-            this.hash = "$2b" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
+            this.hash = "$2a" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
                         EncodeBase64(ref this.salt, 0) +
                         EncodeBase64(ref this.ctext_arr, 1);
 
@@ -438,12 +438,12 @@ namespace Bcrypt
         public Bcrypt(ref String pw_str, int exp)
         {
             this.p_array = new UInt32[18];
-            this.s_boxes = new UInt32[4,256];
+            this.s_boxes = new UInt32[4, 256];
             this.password_ext = new UInt32[18];
             this.salt = new UInt32[4];
             this.salt_ext = new UInt32[18];
             this.ctext_arr = new UInt32[6];
-           
+
             // Check that cost factor is between 4 and 31 inclusive
             if (exp < 4)
             {
@@ -463,10 +463,10 @@ namespace Bcrypt
 
             for (int i = 18; i < 256; i++)
             {
-                this.s_boxes[0,i] = this.HEX_PI[i];
-                this.s_boxes[1,i] = this.HEX_PI[i+256];
-                this.s_boxes[2,i] = this.HEX_PI[i+512];
-                this.s_boxes[3,i] = this.HEX_PI[i+768];
+                this.s_boxes[0, i] = this.HEX_PI[i];
+                this.s_boxes[1, i] = this.HEX_PI[i + 256];
+                this.s_boxes[2, i] = this.HEX_PI[i + 512];
+                this.s_boxes[3, i] = this.HEX_PI[i + 768];
             }
 
             // Password expansion and store
@@ -526,9 +526,9 @@ namespace Bcrypt
             // Store ctext in array of 6 UInt32's
             entry = 0;
             arr_byte_counter = 0;
-            for(int i = 0; i < this.ctext.Length; i++)
+            for (int i = 0; i < this.ctext.Length; i++)
             {
-                if(arr_byte_counter > 24)
+                if (arr_byte_counter > 24)
                 {
                     arr_byte_counter = 0;
                     entry++;
@@ -570,7 +570,7 @@ namespace Bcrypt
                 this.ctext_arr[5] = ctext_right;
             }
 
-            this.hash = "$2b" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
+            this.hash = "$2a" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
                         EncodeBase64(ref this.salt, 0) +
                         EncodeBase64(ref this.ctext_arr, 1);
 
@@ -708,7 +708,7 @@ namespace Bcrypt
                 this.ctext_arr[5] = ctext_right;
             }
 
-            this.hash = "$2b" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
+            this.hash = "$2a" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
                         EncodeBase64(ref this.salt, 0) +
                         EncodeBase64(ref this.ctext_arr, 1);
 
@@ -728,7 +728,7 @@ namespace Bcrypt
         {
             return ((this.s_boxes[0, x >> 24] + this.s_boxes[1, x >> 16 & 0xff]) ^
                    this.s_boxes[2, x >> 8 & 0xff]) + this.s_boxes[3, x & 0xff];
-        } 
+        }
 
         public void Blowfish_Encrypt(ref UInt32 left, ref UInt32 right)
         {
@@ -737,7 +737,7 @@ namespace Bcrypt
             UInt32 r = right;
 
             l ^= this.p_array[0];
-            for(int i = 0; i <= 14;)
+            for (int i = 0; i <= 14;)
             {
                 n = this.s_boxes[0, ((l >> 24) & 0xff)];
                 n += this.s_boxes[1, (l >> 16) & 0xff];
@@ -757,7 +757,7 @@ namespace Bcrypt
 
         public void Bcrypt_ExpandKey()
         {
-            for(int i = 0; i < 18; i++)
+            for (int i = 0; i < 18; i++)
             {
                 this.p_array[i] = this.p_array[i] ^ this.password_ext[i];
             }
@@ -768,7 +768,7 @@ namespace Bcrypt
             UInt64 salt_half;
             UInt32 salt_itr = 0;
 
-            for(int i = 0; i < 9; i++)
+            for (int i = 0; i < 9; i++)
             {
                 salt_half = (((UInt64)this.salt[2 * (salt_itr % 2)]) << 32) | this.salt[2 * (salt_itr % 2) + 1];
                 block = block ^ salt_half;
@@ -781,9 +781,9 @@ namespace Bcrypt
                 this.p_array[2 * i + 1] = block_right;
             }
 
-            for(int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; i++)
             {
-                for(int j = 0; j < 128; j++)
+                for (int j = 0; j < 128; j++)
                 {
                     salt_half = (((UInt64)this.salt[2 * (salt_itr % 2)]) << 32) | this.salt[2 * (salt_itr % 2) + 1];
                     block = block ^ salt_half;
@@ -792,8 +792,8 @@ namespace Bcrypt
                     block_right = (UInt32)(block & 0xFFFFFFFF);
                     Blowfish_Encrypt(ref block_left, ref block_right);
                     block = ((UInt64)block_left << 32) | block_right;
-                    this.s_boxes[i,2 * j] = block_left;
-                    this.s_boxes[i,2 * j + 1] = block_right;
+                    this.s_boxes[i, 2 * j] = block_left;
+                    this.s_boxes[i, 2 * j + 1] = block_right;
                 }
             }
         }
@@ -834,7 +834,7 @@ namespace Bcrypt
             UInt32 c2;
             int entry = 0;
             int arr_byte_counter = 0;
-            while(p < data.Length * 4 - char_truncate)
+            while (p < data.Length * 4 - char_truncate)
             {
                 if (arr_byte_counter > 24)
                 {
@@ -849,7 +849,7 @@ namespace Bcrypt
 
                 c1 = (c1 & 0x03) << 4;
 
-                if(p >= data.Length * 4 - char_truncate)
+                if (p >= data.Length * 4 - char_truncate)
                 {
                     buffer += this.base64[(int)c1];
                     break;
@@ -913,7 +913,7 @@ namespace Bcrypt
                 c1 = get_index64(data[p]);
                 c2 = get_index64(data[p + 1]);
 
-                if(c1 == 255 || c2 == 255)
+                if (c1 == 255 || c2 == 255)
                 {
                     break;
                 }
@@ -928,7 +928,7 @@ namespace Bcrypt
 
                 c3 = get_index64(data[p + 2]);
 
-                if(c3 == 255)
+                if (c3 == 255)
                 {
                     break;
                 }
@@ -936,14 +936,14 @@ namespace Bcrypt
                 buffer += (((c2 & 0x0f) << 4) | ((c3 & 0x3c) >> 2)).ToString("x");
                 bp++;
 
-                if((p + 3) >= data.Length)
+                if ((p + 3) >= data.Length)
                 {
                     break;
                 }
 
                 c4 = get_index64(data[p + 3]);
 
-                if(c4 == 255)
+                if (c4 == 255)
                 {
                     break;
                 }
@@ -1020,11 +1020,11 @@ namespace Bcrypt
                     }
                     ret[i] |= val << (8 * (4 - (j / 2) - 1));
                 }
-                
+
             }
             return ret;
         }
-        
+
         public void CleanUp()
         {
             // Clean up P-array and password array
