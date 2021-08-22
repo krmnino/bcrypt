@@ -26,9 +26,13 @@ namespace Bcrypt
 
             cleartext = "<.S.2K(Zq'";
             base64_salt = "VYAclAMpaXY/oqAo9yUpku";
+            //base64_salt = "ACfku9dT6.H8VjdKb8nhlu"
             Bcrypt custom_b64salt = new Bcrypt(ref cleartext, ref base64_salt, 4);
             ret = custom_b64salt.Hash;
             Console.WriteLine(ret);
+
+            Base64 encdec = new Base64();
+            var ret_slt = encdec.Decoder("ACfku9dT6.H8VjdKb8nhlu", 16);
         }
     }
 }
