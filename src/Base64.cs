@@ -6,6 +6,15 @@ namespace Bcrypt
 {
     class Base64
     {
+        private readonly Char[] base64 = {
+            '.', '/', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+            'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+            'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b',
+            'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+            'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+            'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
+            '6', '7', '8', '9' };
+
         private readonly Byte[] index64 = {
             255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
             255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -29,12 +38,42 @@ namespace Bcrypt
             return (c < 0 || c >= index64.Length) ? (Byte)255 : this.index64[c];
         }
 
-        public String Encoder(String input_str)
+        public String Encoder(ref Byte[] input_data)
         {
-            return input_str;
+            List<Char> buffer = new List<Char>();
+            int p = 0;
+            UInt32 c1;
+            UInt32 c2;
+            String ret;
+            while (p < input_data.Length)
+            {
+                c1 = (UInt32)(input_data[p++] & 0xff);
+                buffer.Add(this.base64[(c1 >> 2) & 0x3f]);
+                c1 = (c1 & 0x03) << 4;
+                if (p >= input_data.Length)
+                {
+                    buffer.Add(this.base64[c1 & 0x3f]);
+                    break;
+                }
+                c2 = (UInt32)(input_data[p++] & 0xff);
+                c1 |= (c2 >> 4) & 0x0f;
+                buffer.Add(this.base64[c1 & 0x3f]);
+                c1 = (c2 & 0x0f) << 2;
+                if (p >= input_data.Length)
+                {
+                    buffer.Add(this.base64[c1 & 0x3f]);
+                    break;
+                }
+                c2 = (UInt32)(input_data[p++] & 0xff);
+                c1 |= (c2 >> 6) & 0x03;
+                buffer.Add(this.base64[c1 & 0x3f]);
+                buffer.Add(this.base64[c2 & 0x3f]);
+            }
+            ret = new String(buffer.ToArray());
+            return ret;
         }
 
-        public Byte[] Decoder(String input_str, int max_length)
+        public Byte[] Decoder(ref String input_str, int max_length)
         {
             List<Byte> buffer = new List<Byte>();
             int p = 0;
@@ -48,36 +87,27 @@ namespace Bcrypt
             {
                 c1 = get_index64(input_str[p++]);
                 c2 = get_index64(input_str[p++]);
-
                 if (c1 == 255 || c2 == 255)
                 {
                     break;
                 }
-
                 buffer.Add((Byte)((c1 << 2) | ((c2 & 0x30) >> 4)));
                 bp++;
-
                 if (buffer.Count >= max_length || p >= input_str.Length)
                 {
                     break;
                 }
-
                 c3 = get_index64(input_str[p++]);
-
                 if (c3 == 255)
                 {
                     break;
                 }
-
                 buffer.Add((Byte)(((c2 & 0x0f) << 4) | ((c3 & 0x3c) >> 2)));
-
                 if (buffer.Count >= max_length || p >= input_str.Length)
                 {
                     break;
                 }
-
                 c4 = get_index64(input_str[p++]);
-
                 buffer.Add((Byte)(((c3 & 0x03) << 6) | c4));
             }
             ret = new Byte[buffer.Count];
