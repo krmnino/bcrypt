@@ -38,19 +38,19 @@ namespace Bcrypt
             return (c < 0 || c >= index64.Length) ? (Byte)255 : this.index64[c];
         }
 
-        public String Encoder(ref Byte[] input_data)
+        public String Encoder(ref Byte[] input_data, int len)
         {
             List<Char> buffer = new List<Char>();
             int p = 0;
             UInt32 c1;
             UInt32 c2;
             String ret;
-            while (p < input_data.Length)
+            while (p < len)
             {
                 c1 = (UInt32)(input_data[p++] & 0xff);
                 buffer.Add(this.base64[(c1 >> 2) & 0x3f]);
                 c1 = (c1 & 0x03) << 4;
-                if (p >= input_data.Length)
+                if (p >= len)
                 {
                     buffer.Add(this.base64[c1 & 0x3f]);
                     break;
@@ -59,7 +59,7 @@ namespace Bcrypt
                 c1 |= (c2 >> 4) & 0x0f;
                 buffer.Add(this.base64[c1 & 0x3f]);
                 c1 = (c2 & 0x0f) << 2;
-                if (p >= input_data.Length)
+                if (p >= len)
                 {
                     buffer.Add(this.base64[c1 & 0x3f]);
                     break;
