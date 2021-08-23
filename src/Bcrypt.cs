@@ -279,148 +279,7 @@ namespace Bcrypt
 
         public Bcrypt() { }
 
-        //public Bcrypt(ref String pw_str, ref UInt32[] input_salt, int exp)
-        //{
-        //    this.p_array = new UInt32[18];
-        //    this.s_boxes = new UInt32[4, 256];
-        //    this.password_ext = new UInt32[18];
-        //    this.ctext_arr = new UInt32[6];
-        //    this.salt = new UInt32[4];
-        //    this.salt_ext = new UInt32[18];
-        //
-        //    // Check that cost factor is between 4 and 31 inclusive
-        //    if (exp < 4)
-        //    {
-        //        exp = 4;
-        //    }
-        //    else if (exp > 31)
-        //    {
-        //        exp = 31;
-        //    }
-        //    this.cost = (int)Math.Pow(2, exp);
-        //    // END - Check that cost factor is between 4 and 31 inclusive
-        //
-        //    for (int i = 0; i < 18; i++)
-        //    {
-        //        this.p_array[i] = this.HEX_PI[i];
-        //    }
-        //
-        //    for (int i = 0; i < 256; i++)
-        //    {
-        //        this.s_boxes[0, i] = this.HEX_PI[i + 18];
-        //        this.s_boxes[1, i] = this.HEX_PI[i + 256 + 18];
-        //        this.s_boxes[2, i] = this.HEX_PI[i + 512 + 18];
-        //        this.s_boxes[3, i] = this.HEX_PI[i + 768 + 18];
-        //    }
-        //
-        //    // Password expansion and store
-        //    int repeat_pw = 72 / pw_str.Length;
-        //    int entry = 0;
-        //    int arr_byte_counter = 0;
-        //    UInt32 single_char;
-        //    for (int i = 0; i < repeat_pw; i++)
-        //    {
-        //        for (int j = 0; j < pw_str.Length; j++)
-        //        {
-        //            if (arr_byte_counter > 24)
-        //            {
-        //                arr_byte_counter = 0;
-        //                entry++;
-        //            }
-        //            if (entry >= password_ext.Length)
-        //            {
-        //                break;
-        //            }
-        //            single_char = pw_str[j];
-        //            single_char = single_char << (24 - arr_byte_counter);
-        //            this.password_ext[entry] |= single_char;
-        //            arr_byte_counter += 8;
-        //            if (j == pw_str.Length - 1)
-        //            {
-        //                if (arr_byte_counter > 24)
-        //                {
-        //                    arr_byte_counter = 0;
-        //                    entry++;
-        //                }
-        //                this.password_ext[entry] |= 0x00;
-        //                arr_byte_counter += 8;
-        //            }
-        //        }
-        //    }
-        //    // END - Password expansion and store
-        //
-        //    // Store ctext in array of 6 UInt32's
-        //    entry = 0;
-        //    arr_byte_counter = 0;
-        //    for (int i = 0; i < this.ctext.Length; i++)
-        //    {
-        //        if (arr_byte_counter > 24)
-        //        {
-        //            arr_byte_counter = 0;
-        //            entry++;
-        //        }
-        //        single_char = this.ctext[i];
-        //        single_char = single_char << (24 - arr_byte_counter);
-        //        this.ctext_arr[entry] |= single_char;
-        //        arr_byte_counter += 8;
-        //    }
-        //    // END - Store ctext in array of 6 UInt32's
-        //
-        //    // Set salt to input salt, expansion, and store
-        //    for (int i = 0; i < this.salt.Length; i++)
-        //    {
-        //        this.salt[i] = input_salt[i];
-        //    }
-        //
-        //    int salt_entry = 0;
-        //    for (int i = 0; i < this.salt_ext.Length; i++)
-        //    {
-        //        this.salt_ext[i] = this.salt[salt_entry++];
-        //        if (salt_entry >= 4)
-        //        {
-        //            salt_entry = 0;
-        //        }
-        //    }
-        //    // END - Set salt to input salt, expansion, and store
-        //
-        //    Bcrypt_ExpandKey();
-        //    for (int i = 0; i < this.cost; i++)
-        //    {
-        //        Bcrypt_Expand0Key(ref this.password_ext);
-        //        Bcrypt_Expand0Key(ref this.salt_ext);
-        //    }
-        //
-        //    UInt32 ctext_left;
-        //    UInt32 ctext_right;
-        //    for (int i = 0; i < 64; i++)
-        //    {
-        //        ctext_left = this.ctext_arr[0];
-        //        ctext_right = this.ctext_arr[1];
-        //        Blowfish_Encrypt(ref ctext_left, ref ctext_right);
-        //        this.ctext_arr[0] = ctext_left;
-        //        this.ctext_arr[1] = ctext_right;
-        //
-        //        ctext_left = this.ctext_arr[2];
-        //        ctext_right = this.ctext_arr[3];
-        //        Blowfish_Encrypt(ref ctext_left, ref ctext_right);
-        //        this.ctext_arr[2] = ctext_left;
-        //        this.ctext_arr[3] = ctext_right;
-        //
-        //        ctext_left = this.ctext_arr[4];
-        //        ctext_right = this.ctext_arr[5];
-        //        Blowfish_Encrypt(ref ctext_left, ref ctext_right);
-        //        this.ctext_arr[4] = ctext_left;
-        //        this.ctext_arr[5] = ctext_right;
-        //    }
-        //
-        //    this.hash = "$2a" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
-        //                EncodeBase64(ref this.salt, 0) +
-        //                EncodeBase64(ref this.ctext_arr, 1);
-        //
-        //    CleanUp();
-        //}
-
-        public Bcrypt(ref String pw_str, int exp)
+        public Bcrypt(ref String pw_str, ref Byte[] input_salt, int exp)
         {
             this.p_array = new UInt32[18];
             this.s_boxes = new UInt32[4, 256];
@@ -437,9 +296,121 @@ namespace Bcrypt
                 exp = 31;
             }
             this.cost = exp;
-            this.cost = (int)Math.Pow(2, exp);
+            this.rounds = (UInt32)Math.Pow(2, exp);
             // END - Check that cost factor is between 4 and 31 inclusive
+
+            for (int i = 0; i < 18; i++)
+            {
+                this.p_array[i] = this.HEX_PI[i];
+            }
         
+            for (int i = 0; i < 256; i++)
+            {
+                this.s_boxes[0, i] = this.HEX_PI[i + 18];
+                this.s_boxes[1, i] = this.HEX_PI[i + 256 + 18];
+                this.s_boxes[2, i] = this.HEX_PI[i + 512 + 18];
+                this.s_boxes[3, i] = this.HEX_PI[i + 768 + 18];
+            }
+
+            // Convert password string into array of bytes
+            this.password_binary = new Byte[pw_str.Length + 1];
+            Byte[] bin = System.Text.Encoding.UTF8.GetBytes(pw_str);
+            for (int i = 0; i < bin.Length; i++)
+            {
+                this.password_binary[i] = bin[i];
+            }
+            this.password_binary[password_binary.Length - 1] = 0x00;
+            // END - Convert password string into array of bytes
+
+            // Store ctext in array of 6 UInt32's
+            int entry = 0;
+            int arr_byte_counter = 0;
+            UInt32 single_char;
+            for (int i = 0; i < this.ctext.Length; i++)
+            {
+                if (arr_byte_counter > 24)
+                {
+                    arr_byte_counter = 0;
+                    entry++;
+                }
+                single_char = this.ctext[i];
+                single_char = (single_char << (24 - arr_byte_counter));
+                this.ctext_arr[entry] |= single_char;
+                arr_byte_counter += 8;
+            }
+            // END - Store ctext in array of 6 UInt32's
+
+            // Set salt to input salt
+            this.salt_binary = input_salt;
+            // END - Set salt to input salt
+
+            Bcrypt_ExpandKey();
+            for (int i = 0; i < this.rounds; i++)
+            {
+                Bcrypt_Expand0Key(ref this.password_binary, false);
+                Bcrypt_Expand0Key(ref this.salt_binary, false);
+            }
+
+            UInt32 ctext_left;
+            UInt32 ctext_right;
+            for (int i = 0; i < 64; i++)
+            {
+                ctext_left = this.ctext_arr[0];
+                ctext_right = this.ctext_arr[1];
+                Blowfish_Encrypt(ref ctext_left, ref ctext_right);
+                this.ctext_arr[0] = ctext_left;
+                this.ctext_arr[1] = ctext_right;
+        
+                ctext_left = this.ctext_arr[2];
+                ctext_right = this.ctext_arr[3];
+                Blowfish_Encrypt(ref ctext_left, ref ctext_right);
+                this.ctext_arr[2] = ctext_left;
+                this.ctext_arr[3] = ctext_right;
+        
+                ctext_left = this.ctext_arr[4];
+                ctext_right = this.ctext_arr[5];
+                Blowfish_Encrypt(ref ctext_left, ref ctext_right);
+                this.ctext_arr[4] = ctext_left;
+                this.ctext_arr[5] = ctext_right;
+            }
+
+            Byte[] ctext_binary = new Byte[ctext_arr.Length * 4];
+            for (int i = 0; i < ctext_arr.Length; i++)
+            {
+                ctext_binary[4 * i] = (Byte)((this.ctext_arr[i] >> 24) & 0xff);
+                ctext_binary[4 * i + 1] = (Byte)((this.ctext_arr[i] >> 16) & 0xff);
+                ctext_binary[4 * i + 2] = (Byte)((this.ctext_arr[i] >> 8) & 0xff);
+                ctext_binary[4 * i + 3] = (Byte)((this.ctext_arr[i]) & 0xff);
+            }
+
+            this.hash = "$2a" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
+                        enc_dec.Encoder(ref this.salt_binary, this.salt_binary.Length) +
+                        enc_dec.Encoder(ref ctext_binary, ctext_binary.Length - 1);
+
+            CleanUp();
+        }
+
+        public Bcrypt(ref String pw_str, int exp)
+        {
+            this.p_array = new UInt32[18];
+            this.s_boxes = new UInt32[4, 256];
+            this.ctext_arr = new UInt32[6];
+            this.salt_binary = new Byte[16];
+            Base64 enc_dec = new Base64();
+
+            // Check that cost factor is between 4 and 31 inclusive
+            if (exp < 4)
+            {
+                exp = 4;
+            }
+            else if (exp > 31)
+            {
+                exp = 31;
+            }
+            this.cost = exp;
+            this.rounds = (UInt32)Math.Pow(2, exp);
+            // END - Check that cost factor is between 4 and 31 inclusive
+
             for (int i = 0; i < 18; i++)
             {
                 this.p_array[i] = this.HEX_PI[i];
@@ -483,24 +454,23 @@ namespace Bcrypt
 
             // Random salt generation
             var rand = new Random();
-            
-            for (int i = 0; i < ctext_arr.Length; i++)
+            for (int i = 0; i < this.salt_binary.Length; i += 4)
             {
                 UInt32 rand_val = (UInt32)rand.Next(); ;
-                this.salt_binary[4 * i] = (Byte)((rand_val >> 24) & 0xff);
-                this.salt_binary[4 * i + 1] = (Byte)((rand_val >> 16) & 0xff);
-                this.salt_binary[4 * i + 2] = (Byte)((rand_val >> 8) & 0xff);
-                this.salt_binary[4 * i + 3] = (Byte)((rand_val) & 0xff);
+                this.salt_binary[i] = (Byte)((rand_val >> 24) & 0xff);
+                this.salt_binary[i + 1] = (Byte)((rand_val >> 16) & 0xff);
+                this.salt_binary[i + 2] = (Byte)((rand_val >> 8) & 0xff);
+                this.salt_binary[i + 3] = (Byte)((rand_val) & 0xff);
             }
             // END - Random salt generation
 
             Bcrypt_ExpandKey();
-            for (int i = 0; i < this.cost; i++)
+            for (int i = 0; i < this.rounds; i++)
             {
                 Bcrypt_Expand0Key(ref this.password_binary, false);
                 Bcrypt_Expand0Key(ref this.salt_binary, false);
             }
-        
+
             UInt32 ctext_left;
             UInt32 ctext_right;
             for (int i = 0; i < 64; i++)
