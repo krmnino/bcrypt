@@ -383,7 +383,7 @@ namespace Bcrypt
                 ctext_binary[4 * i + 3] = (Byte)((this.ctext_arr[i]) & 0xff);
             }
 
-            this.hash = "$2a" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
+            this.hash = "$2b" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
                         enc_dec.Encoder(ref this.salt_binary, this.salt_binary.Length) +
                         enc_dec.Encoder(ref ctext_binary, ctext_binary.Length - 1);
 
@@ -503,7 +503,7 @@ namespace Bcrypt
                 ctext_binary[4 * i + 3] = (Byte)((this.ctext_arr[i]) & 0xff);
             }
 
-            this.hash = "$2a" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
+            this.hash = "$2b" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
                         enc_dec.Encoder(ref this.salt_binary, this.salt_binary.Length) +
                         enc_dec.Encoder(ref ctext_binary, ctext_binary.Length - 1);
 
@@ -614,7 +614,7 @@ namespace Bcrypt
                 ctext_binary[4 * i + 3] = (Byte)((this.ctext_arr[i]) & 0xff);
             }
 
-            this.hash = "$2a" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
+            this.hash = "$2b" + "$" + ((exp <= 9) ? "0" + exp.ToString() : exp.ToString()) + "$" +
                         enc_dec.Encoder(ref this.salt_binary, this.salt_binary.Length) +
                         enc_dec.Encoder(ref ctext_binary, ctext_binary.Length - 1);
 
