@@ -33,7 +33,7 @@ namespace Bcrypt
             cost = 5;
             Bcrypt b2 = new Bcrypt(ref cleartext, ref salt, cost);
             expected_hash = "$2a$05$kVNDrnYKvbNr5AIcxNzeIuRcyIF5cZk6UrwHGxENbxP5dVv.WQM/G";
-            actual_hash = b1.Hash;
+            actual_hash = b2.Hash;
             Console.WriteLine("Expected -> " + expected_hash);
             Console.WriteLine("Actual   -> " + actual_hash);
             Console.WriteLine("========================================================================");
@@ -46,7 +46,7 @@ namespace Bcrypt
             cost = 4;
             Bcrypt b3 = new Bcrypt(ref cleartext, ref salt, cost);
             expected_hash = "$2a$04$VYAclAMpaXY/oqAo9yUpkuWmoYywaPzyhu56HxXpVltnBIfmO9tgu";
-            actual_hash = b1.Hash;
+            actual_hash = b3.Hash;
             Console.WriteLine("Expected -> " + expected_hash);
             Console.WriteLine("Actual   -> " + actual_hash);
             Console.WriteLine("========================================================================");
@@ -59,7 +59,7 @@ namespace Bcrypt
             cost = 4;
             Bcrypt b4 = new Bcrypt(ref cleartext, ref salt, cost);
             expected_hash = "$2a$04$VYAclAMpaXY/oqAo9yUpkuWmoYywaPzyhu56HxXpVltnBIfmO9tgu";
-            actual_hash = b1.Hash;
+            actual_hash = b4.Hash;
             Console.WriteLine("Expected -> " + expected_hash);
             Console.WriteLine("Actual   -> " + actual_hash);
             Console.WriteLine("========================================================================");
@@ -72,7 +72,7 @@ namespace Bcrypt
             cost = 4;
             Bcrypt b5 = new Bcrypt(ref cleartext, ref salt, cost);
             expected_hash = "$2a$04$VYAclAMpaXY/oqAo9yUpkuWmoYywaPzyhu56HxXpVltnBIfmO9tgu";
-            actual_hash = b1.Hash;
+            actual_hash = b5.Hash;
             Console.WriteLine("Expected -> " + expected_hash);
             Console.WriteLine("Actual   -> " + actual_hash);
             Console.WriteLine("========================================================================");
@@ -80,11 +80,11 @@ namespace Bcrypt
             //////////////////////////////////////////////////////////////////////////////////////////////
             
             Console.WriteLine("Test Case #6");
-            cleartext = "<.S.2K(Zq'";
-            salt = "$2a$21$VYAclAMpaXY/oqAo9yUpku";
+            cleartext = "ggJ\\KbTnDG";
+            salt = "$2a$07$4H896R09bzjhapgCPS/LYu";
             Bcrypt b6 = new Bcrypt(ref cleartext, ref salt);
-            expected_hash = "$2a$04$VYAclAMpaXY/oqAo9yUpkuWmoYywaPzyhu56HxXpVltnBIfmO9tgu";
-            actual_hash = b1.Hash;
+            expected_hash = "$2a$07$4H896R09bzjhapgCPS/LYuMzAQluVgR5iu/ALF8L8Aln6lzzYXwbq";
+            actual_hash = b6.Hash;
             Console.WriteLine("Expected -> " + expected_hash);
             Console.WriteLine("Actual   -> " + actual_hash);
             Console.WriteLine("========================================================================");

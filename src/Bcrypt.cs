@@ -276,6 +276,7 @@ namespace Bcrypt
         private String hash;
         private int cost;
         private UInt32 rounds;
+        private char version;
 
         public Bcrypt() { }
 
@@ -621,9 +622,118 @@ namespace Bcrypt
             CleanUp();
         }
 
-        public Bcrypt(ref String password, ref String salt_cost)
+        public Bcrypt(ref String pw_str, ref String salt_cost)
         {
-            int ret = Parse_Salt_Cost(ref salt_cost);
+            this.p_array = new UInt32[18];
+            this.s_boxes = new UInt32[4, 256];
+            this.ctext_arr = new UInt32[6];
+            Base64 enc_dec = new Base64();
+
+            // Call parsing method that extracts cost salt
+            int ret = Parse_Salt_Cost(ref salt_cost, ref enc_dec);
+            if(ret == -1)
+            {
+                return;
+            }
+
+            // Check that cost factor is between 4 and 31 inclusive
+            if (this.cost < 4)
+            {
+                this.cost = 4;
+            }
+            else if (this.cost > 31)
+            {
+                this.cost = 31;
+            }
+
+            this.rounds = (UInt32)Math.Pow(2, this.cost);
+            // END - Check that cost factor is between 4 and 31 inclusive
+
+            for (int i = 0; i < 18; i++)
+            {
+                this.p_array[i] = this.HEX_PI[i];
+            }
+
+            for (int i = 0; i < 256; i++)
+            {
+                this.s_boxes[0, i] = this.HEX_PI[i + 18];
+                this.s_boxes[1, i] = this.HEX_PI[i + 256 + 18];
+                this.s_boxes[2, i] = this.HEX_PI[i + 512 + 18];
+                this.s_boxes[3, i] = this.HEX_PI[i + 768 + 18];
+            }
+
+            // Convert password string into array of bytes
+            this.password_binary = new Byte[pw_str.Length + 1];
+            Byte[] bin = System.Text.Encoding.UTF8.GetBytes(pw_str);
+            for (int i = 0; i < bin.Length; i++)
+            {
+                this.password_binary[i] = bin[i];
+            }
+            this.password_binary[password_binary.Length - 1] = 0x00;
+            // END - Convert password string into array of bytes
+
+            // Store ctext in array of 6 UInt32's
+            int entry = 0;
+            int arr_byte_counter = 0;
+            UInt32 single_char;
+            for (int i = 0; i < this.ctext.Length; i++)
+            {
+                if (arr_byte_counter > 24)
+                {
+                    arr_byte_counter = 0;
+                    entry++;
+                }
+                single_char = this.ctext[i];
+                single_char = (single_char << (24 - arr_byte_counter));
+                this.ctext_arr[entry] |= single_char;
+                arr_byte_counter += 8;
+            }
+            // END - Store ctext in array of 6 UInt32's
+
+            Bcrypt_ExpandKey();
+            for (int i = 0; i < this.rounds; i++)
+            {
+                Bcrypt_Expand0Key(ref this.password_binary, false);
+                Bcrypt_Expand0Key(ref this.salt_binary, false);
+            }
+
+            UInt32 ctext_left;
+            UInt32 ctext_right;
+            for (int i = 0; i < 64; i++)
+            {
+                ctext_left = this.ctext_arr[0];
+                ctext_right = this.ctext_arr[1];
+                Blowfish_Encrypt(ref ctext_left, ref ctext_right);
+                this.ctext_arr[0] = ctext_left;
+                this.ctext_arr[1] = ctext_right;
+
+                ctext_left = this.ctext_arr[2];
+                ctext_right = this.ctext_arr[3];
+                Blowfish_Encrypt(ref ctext_left, ref ctext_right);
+                this.ctext_arr[2] = ctext_left;
+                this.ctext_arr[3] = ctext_right;
+
+                ctext_left = this.ctext_arr[4];
+                ctext_right = this.ctext_arr[5];
+                Blowfish_Encrypt(ref ctext_left, ref ctext_right);
+                this.ctext_arr[4] = ctext_left;
+                this.ctext_arr[5] = ctext_right;
+            }
+
+            Byte[] ctext_binary = new Byte[ctext_arr.Length * 4];
+            for (int i = 0; i < ctext_arr.Length; i++)
+            {
+                ctext_binary[4 * i] = (Byte)((this.ctext_arr[i] >> 24) & 0xff);
+                ctext_binary[4 * i + 1] = (Byte)((this.ctext_arr[i] >> 16) & 0xff);
+                ctext_binary[4 * i + 2] = (Byte)((this.ctext_arr[i] >> 8) & 0xff);
+                ctext_binary[4 * i + 3] = (Byte)((this.ctext_arr[i]) & 0xff);
+            }
+
+            this.hash = "$2" + this.version + "$" + ((this.cost <= 9) ? "0" + this.cost.ToString() : this.cost.ToString()) + "$" +
+                        enc_dec.Encoder(ref this.salt_binary, this.salt_binary.Length) +
+                        enc_dec.Encoder(ref ctext_binary, ctext_binary.Length - 1);
+
+            CleanUp();
         }
 
         public String Hash { get => this.hash; }
@@ -747,14 +857,13 @@ namespace Bcrypt
             return words;
         }
 
-        private int Parse_Salt_Cost(ref String salt_cost)
+        private int Parse_Salt_Cost(ref String salt_cost, ref Base64 enc_dec)
         {
             if(salt_cost[0] != '$' || salt_cost[1] != '2')
             {
                 return -1;
             }
             String temp_salt;
-            Base64 enc_dec = new Base64();
             switch (salt_cost[2])
             {
                 case '$':
@@ -771,6 +880,7 @@ namespace Bcrypt
                     {
                         return -1;
                     }
+                    this.version = 'a';
                     this.cost = (salt_cost[4] - '0') * 10 + (salt_cost[5] - '0');
                     temp_salt = salt_cost.Substring(7);
                     this.salt_binary = enc_dec.Decoder(ref temp_salt, 16);
@@ -780,6 +890,7 @@ namespace Bcrypt
                     {
                         return -1;
                     }
+                    this.version = 'b';
                     this.cost = (salt_cost[3] - '0') * 10 + (salt_cost[4] - '0');
                     temp_salt = salt_cost.Substring(7);
                     this.salt_binary = enc_dec.Decoder(ref temp_salt, 16);
@@ -789,6 +900,7 @@ namespace Bcrypt
                     {
                         return -1;
                     }
+                    this.version = 'x';
                     this.cost = (salt_cost[3] - '0') * 10 + (salt_cost[4] - '0');
                     temp_salt = salt_cost.Substring(7);
                     this.salt_binary = enc_dec.Decoder(ref temp_salt, 16);
@@ -798,6 +910,7 @@ namespace Bcrypt
                     {
                         return -1;
                     }
+                    this.version = 'y';
                     this.cost = (salt_cost[3] - '0') * 10 + (salt_cost[4] - '0');
                     temp_salt = salt_cost.Substring(7);
                     this.salt_binary = enc_dec.Decoder(ref temp_salt, 16);
