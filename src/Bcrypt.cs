@@ -621,6 +621,11 @@ namespace Bcrypt
             CleanUp();
         }
 
+        public Bcrypt(ref String password, ref String salt_cost)
+        {
+            int ret = Parse_Salt_Cost(ref salt_cost);
+        }
+
         public String Hash { get => this.hash; }
 
         private void Blowfish_Encrypt(ref UInt32 left, ref UInt32 right)
@@ -740,6 +745,67 @@ namespace Bcrypt
                 offset = (offset + 1) % data.Length;
             }
             return words;
+        }
+
+        private int Parse_Salt_Cost(ref String salt_cost)
+        {
+            if(salt_cost[0] != '$' || salt_cost[1] != '2')
+            {
+                return -1;
+            }
+            String temp_salt;
+            Base64 enc_dec = new Base64();
+            switch (salt_cost[2])
+            {
+                case '$':
+                    if(!Char.IsDigit(salt_cost[3]) || !Char.IsDigit(salt_cost[4]) || salt_cost[5] != '$')
+                    {
+                        return -1;
+                    }
+                    this.cost = (salt_cost[3] - '0') * 10 + (salt_cost[4] - '0');
+                    temp_salt = salt_cost.Substring(6);
+                    this.salt_binary = enc_dec.Decoder(ref temp_salt, 16);
+                    break;
+                case 'a':
+                    if (salt_cost[3] != '$' || !Char.IsDigit(salt_cost[4]) || !Char.IsDigit(salt_cost[5]) || salt_cost[6] != '$')
+                    {
+                        return -1;
+                    }
+                    this.cost = (salt_cost[4] - '0') * 10 + (salt_cost[5] - '0');
+                    temp_salt = salt_cost.Substring(7);
+                    this.salt_binary = enc_dec.Decoder(ref temp_salt, 16);
+                    break;
+                case 'b':
+                    if (salt_cost[3] != '$' || !Char.IsDigit(salt_cost[4]) || !Char.IsDigit(salt_cost[5]) || salt_cost[6] != '$')
+                    {
+                        return -1;
+                    }
+                    this.cost = (salt_cost[3] - '0') * 10 + (salt_cost[4] - '0');
+                    temp_salt = salt_cost.Substring(7);
+                    this.salt_binary = enc_dec.Decoder(ref temp_salt, 16);
+                    break;
+                case 'x':
+                    if (salt_cost[3] != '$' || !Char.IsDigit(salt_cost[4]) || !Char.IsDigit(salt_cost[5]) || salt_cost[6] != '$')
+                    {
+                        return -1;
+                    }
+                    this.cost = (salt_cost[3] - '0') * 10 + (salt_cost[4] - '0');
+                    temp_salt = salt_cost.Substring(7);
+                    this.salt_binary = enc_dec.Decoder(ref temp_salt, 16);
+                    break;
+                case 'y':
+                    if (salt_cost[3] != '$' || !Char.IsDigit(salt_cost[4]) || !Char.IsDigit(salt_cost[5]) || salt_cost[6] != '$')
+                    {
+                        return -1;
+                    }
+                    this.cost = (salt_cost[3] - '0') * 10 + (salt_cost[4] - '0');
+                    temp_salt = salt_cost.Substring(7);
+                    this.salt_binary = enc_dec.Decoder(ref temp_salt, 16);
+                    break;
+                default:
+                    return -1;
+            }
+            return 0;
         }
 
         private void CleanUp()
