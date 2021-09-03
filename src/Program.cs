@@ -6,33 +6,89 @@ namespace Bcrypt
     {
         static void Main(string[] args)
         {
-            Base64 encdec = new Base64();
+            String cleartext;
+            String salt;
+            int cost;
+            String expected_hash;
+            String actual_hash;
 
-            String cleartext = "<.S.2K(Zq'";
-            Bcrypt b = new Bcrypt(ref cleartext, 4);
-            String ret = b.Hash;
-            Console.WriteLine(ret);
+            //////////////////////////////////////////////////////////////////////////////////////////////
 
+            Console.WriteLine("Test Case #1");
             cleartext = "<.S.2K(Zq'";
-            String slt = "VYAclAMpaXY/oqAo9yUpku";
-            Byte[] ret_dec = encdec.Decoder(ref slt, 16);
-            Bcrypt custom_salt = new Bcrypt(ref cleartext, ref ret_dec, 4);
-            ret = custom_salt.Hash;
-            Console.WriteLine(ret);
-            
-            //cleartext = "<.S.2K(Zq'";
-            cleartext = "abc";
-            //base64_salt = "VYAclAMpaXY/oqAo9yUpku";
-            String base64_salt = "1kJyuho8MCVP3HHsjnRMkO";
-            Bcrypt custom_b64salt = new Bcrypt(ref cleartext, ref base64_salt, 6);
-            ret = custom_b64salt.Hash;
-            Console.WriteLine(ret);
+            salt = "VYAclAMpaXY/oqAo9yUpku";
+            cost = 4;
+            Bcrypt b1 = new Bcrypt(ref cleartext, ref salt, cost);
+            expected_hash = "$2a$04$VYAclAMpaXY/oqAo9yUpkuWmoYywaPzyhu56HxXpVltnBIfmO9tgu";
+            actual_hash = b1.Hash;
+            Console.WriteLine("Expected -> " + expected_hash);
+            Console.WriteLine("Actual   -> " + actual_hash);
+            Console.WriteLine("========================================================================");
 
+            //////////////////////////////////////////////////////////////////////////////////////////////
+
+            Console.WriteLine("Test Case #2");
+            cleartext = "5.rApO%5jA";
+            salt = "kVNDrnYKvbNr5AIcxNzeIu";
+            cost = 5;
+            Bcrypt b2 = new Bcrypt(ref cleartext, ref salt, cost);
+            expected_hash = "$2a$05$kVNDrnYKvbNr5AIcxNzeIuRcyIF5cZk6UrwHGxENbxP5dVv.WQM/G";
+            actual_hash = b1.Hash;
+            Console.WriteLine("Expected -> " + expected_hash);
+            Console.WriteLine("Actual   -> " + actual_hash);
+            Console.WriteLine("========================================================================");
+
+            //////////////////////////////////////////////////////////////////////////////////////////////
+
+            Console.WriteLine("Test Case #3");
+            cleartext = "<.S.2K(Zq'";
+            salt = "VYAclAMpaXY/oqAo9yUpku";
+            cost = 4;
+            Bcrypt b3 = new Bcrypt(ref cleartext, ref salt, cost);
+            expected_hash = "$2a$04$VYAclAMpaXY/oqAo9yUpkuWmoYywaPzyhu56HxXpVltnBIfmO9tgu";
+            actual_hash = b1.Hash;
+            Console.WriteLine("Expected -> " + expected_hash);
+            Console.WriteLine("Actual   -> " + actual_hash);
+            Console.WriteLine("========================================================================");
+
+            //////////////////////////////////////////////////////////////////////////////////////////////
+
+            Console.WriteLine("Test Case #4");
+            cleartext = "<.S.2K(Zq'";
+            salt = "VYAclAMpaXY/oqAo9yUpku";
+            cost = 4;
+            Bcrypt b4 = new Bcrypt(ref cleartext, ref salt, cost);
+            expected_hash = "$2a$04$VYAclAMpaXY/oqAo9yUpkuWmoYywaPzyhu56HxXpVltnBIfmO9tgu";
+            actual_hash = b1.Hash;
+            Console.WriteLine("Expected -> " + expected_hash);
+            Console.WriteLine("Actual   -> " + actual_hash);
+            Console.WriteLine("========================================================================");
+
+            //////////////////////////////////////////////////////////////////////////////////////////////
+
+            Console.WriteLine("Test Case #5");
+            cleartext = "<.S.2K(Zq'";
+            salt = "VYAclAMpaXY/oqAo9yUpku";
+            cost = 4;
+            Bcrypt b5 = new Bcrypt(ref cleartext, ref salt, cost);
+            expected_hash = "$2a$04$VYAclAMpaXY/oqAo9yUpkuWmoYywaPzyhu56HxXpVltnBIfmO9tgu";
+            actual_hash = b1.Hash;
+            Console.WriteLine("Expected -> " + expected_hash);
+            Console.WriteLine("Actual   -> " + actual_hash);
+            Console.WriteLine("========================================================================");
+
+            //////////////////////////////////////////////////////////////////////////////////////////////
             
-            slt = "ACfku9dT6.H8VjdKb8nhlu";
-            ret_dec = encdec.Decoder(ref slt, 16);
-            String ret_enc = encdec.Encoder(ref ret_dec, ret_dec.Length);
-            Console.WriteLine(ret_enc);
+            Console.WriteLine("Test Case #6");
+            cleartext = "<.S.2K(Zq'";
+            salt = "$2a$21$VYAclAMpaXY/oqAo9yUpku";
+            Bcrypt b6 = new Bcrypt(ref cleartext, ref salt);
+            expected_hash = "$2a$04$VYAclAMpaXY/oqAo9yUpkuWmoYywaPzyhu56HxXpVltnBIfmO9tgu";
+            actual_hash = b1.Hash;
+            Console.WriteLine("Expected -> " + expected_hash);
+            Console.WriteLine("Actual   -> " + actual_hash);
+            Console.WriteLine("========================================================================");
+
         }
     }
 }
