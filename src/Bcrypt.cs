@@ -891,7 +891,7 @@ namespace Bcrypt
                         return -1;
                     }
                     this.version = 'b';
-                    this.cost = (salt_cost[3] - '0') * 10 + (salt_cost[4] - '0');
+                    this.cost = (salt_cost[4] - '0') * 10 + (salt_cost[5] - '0');
                     temp_salt = salt_cost.Substring(7);
                     this.salt_binary = enc_dec.Decoder(ref temp_salt, 16);
                     break;
@@ -901,7 +901,7 @@ namespace Bcrypt
                         return -1;
                     }
                     this.version = 'x';
-                    this.cost = (salt_cost[3] - '0') * 10 + (salt_cost[4] - '0');
+                    this.cost = (salt_cost[4] - '0') * 10 + (salt_cost[5] - '0');
                     temp_salt = salt_cost.Substring(7);
                     this.salt_binary = enc_dec.Decoder(ref temp_salt, 16);
                     break;
@@ -911,7 +911,7 @@ namespace Bcrypt
                         return -1;
                     }
                     this.version = 'y';
-                    this.cost = (salt_cost[3] - '0') * 10 + (salt_cost[4] - '0');
+                    this.cost = (salt_cost[4] - '0') * 10 + (salt_cost[5] - '0');
                     temp_salt = salt_cost.Substring(7);
                     this.salt_binary = enc_dec.Decoder(ref temp_salt, 16);
                     break;
