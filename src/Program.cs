@@ -83,6 +83,18 @@ namespace Bcrypt
             assert(String.Equals(expected_hash, actual_hash), 6);
             Console.WriteLine(">> Test 6 successful");
         }
+
+        static void test7()
+        {
+            String cleartext = "sometext";
+            String salt = "$2a$10$UMtf/MrdVwSH4JbADZBWMe";
+            Bcrypt b = new Bcrypt(ref cleartext, ref salt);
+            String expected_hash = "$2a$10$UMtf/MrdVwSH4JbADZBWMeH6XI4cdU0XbbrvdbwV9yqopIt9lJxAu";
+            String actual_hash = b.Hash;
+            assert(String.Equals(expected_hash, actual_hash), 6);
+            Console.WriteLine(">> Test 7 successful");
+        }
+
         static void Main(string[] args)
         { 
             bool all = true;
@@ -92,6 +104,7 @@ namespace Bcrypt
             bool t4  = true;
             bool t5  = true;
             bool t6  = true;
+            bool t7  = true;
 
             if (t1 || all)
             {
@@ -116,6 +129,10 @@ namespace Bcrypt
             if (t6 || all)
             {
                 test6();
+            }
+            if (t7 || all)
+            {
+                test7();
             }
         }
     }
